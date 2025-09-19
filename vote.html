@@ -388,14 +388,21 @@
 
         submitKeyBtn.addEventListener('click', handleKeySubmit);
         
-        // --- ▼▼▼ MODIFICATION START: 投票成功後，跳轉至乾淨的URL ▼▼▼ ---
+        // --- ▼▼▼ MODIFICATION START: 使用 History API 清理 URL，無需重載頁面 ▼▼▼ ---
         modalCloseBtn.addEventListener('click', () => {
+            // 1. 手動重設 UI 回到初始畫面
+            successModal.style.display = 'none';
+            showView(homeView);
+            keyInput.value = '';
+            submitKeyBtn.disabled = false;
+            submitKeyBtn.textContent = '下一步';
+            
+            // 2. 清理網址列中的 key 參數，且不留下記錄
             const cleanUrl = window.location.origin + window.location.pathname;
-            window.location.replace(cleanUrl);
+            history.replaceState(null, '', cleanUrl);
         });
         // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
 
     </script>
 </body>
 </html>
-
