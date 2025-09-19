@@ -97,9 +97,7 @@
             <h1>電子投票系統</h1>
             <div class="form-group">
                 <label for="key-input">請輸入8位數投票金鑰</label>
-                <!-- --- ▼▼▼ MODIFICATION START: 增加 autocomplete="off" 禁用瀏覽器記錄 ▼▼▼ --- -->
                 <input type="tel" id="key-input" pattern="[0-9]*" maxlength="8" inputmode="numeric" autocomplete="off" autocomplete="new-password">
-                <!-- --- ▲▲▲ MODIFICATION END ▲▲▲ --- -->
             </div>
             <button class="btn" id="submit-key-btn">下一步</button>
         </div>
@@ -130,7 +128,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzevJqMzDxztvG9aXdyWR4WxMGPGD8geFPHpfpsS6YVOR9CFVVEil5uEgwMLe6u84RR/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzSHmDdTvPTzK70AvaSpUI7ru4HPMQyZGsn6JJDLfxOA9N8sA4OBAfNAN2jW2fomNs7/exec"; 
         
         const homeView = document.getElementById('home-view');
         const voteView = document.getElementById('vote-view');
@@ -240,7 +238,6 @@
             document.getElementById('submit-vote-btn').addEventListener('click', () => handleSubmitVote(keyInput.value.trim()));
         }
         
-        // --- ▼▼▼ MODIFICATION START: 重構事件處理，加入滑動檢測機制 ▼▼▼ ---
         function setupSearchableSelect(selectElement) {
             const input = selectElement.querySelector('.searchable-select-input');
             const list = selectElement.querySelector('.searchable-select-list');
@@ -255,24 +252,23 @@
                 input.dataset.value = options[0].dataset.value;
             }
             
-            function handleInteraction() {
-                // 顯示下拉列表
+            function handleTap() {
                 document.querySelectorAll('.searchable-select-list.show').forEach(l => {
                     if (l !== list) l.classList.remove('show');
                 });
                 list.classList.toggle('show');
-
-                // 彈出鍵盤
                 input.readOnly = false;
                 input.focus();
-                input.select();
+                if(document.activeElement === input) {
+                    input.select();
+                }
             }
 
             input.addEventListener('touchstart', (e) => {
                 isDragging = false;
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
-            });
+            }, { passive: true });
 
             input.addEventListener('touchmove', (e) => {
                 const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
@@ -285,15 +281,13 @@
             input.addEventListener('touchend', (e) => {
                 if (!isDragging) {
                     e.preventDefault();
-                    handleInteraction();
+                    handleTap();
                 }
-            }, { passive: false });
+            });
             
-            // 保留 click 給非觸控裝置 (例如桌面電腦)
             input.addEventListener('click', (e) => {
-                // 檢查是否為觸控模擬的 click，如果是則忽略
-                if ('ontouchend' in document.documentElement) return; 
-                handleInteraction();
+                if ('ontouchend' in document.documentElement) return;
+                handleTap();
             });
 
             document.addEventListener('click', (e) => {
@@ -319,7 +313,6 @@
                 });
             });
         }
-        // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
         
         function showStatusMessage(message, type = 'info') {
             const msgElement = document.getElementById('status-message');
@@ -394,7 +387,15 @@
         }
 
         submitKeyBtn.addEventListener('click', handleKeySubmit);
-        modalCloseBtn.addEventListener('click', () => location.reload());
+        
+        // --- ▼▼▼ MODIFICATION START: 投票成功後，跳轉至乾淨的URL ▼▼▼ ---
+        modalCloseBtn.addEventListener('click', () => {
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.location.replace(cleanUrl);
+        });
+        // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
+
     </script>
 </body>
 </html>
+
