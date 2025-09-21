@@ -41,7 +41,6 @@
         .btn:hover { background-color: var(--dark-green); }
         .btn:disabled { background-color: #aaa; cursor: not-allowed; }
         
-        /* --- ▼▼▼ MODIFICATION START: 新的UI樣式 - 選擇器、按鈕與浮動視窗 ▼▼▼ --- */
         .selection-display {
             display: flex;
             align-items: center;
@@ -68,20 +67,30 @@
             width: 100%; height: 100%; overflow: hidden;
             background-color: rgba(0,0,0,0.5);
             justify-content: center; align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
         }
-        .modal.show { display: flex; }
+        .modal.show { 
+            display: flex;
+            opacity: 1;
+        }
         .modal-content {
             background-color: #fefefe; margin: auto;
             border: 1px solid #888; width: 95%; max-width: 480px;
             border-radius: 8px; text-align: center;
             display: flex; flex-direction: column;
             max-height: 90vh;
+            transform: scale(0.95);
+            transition: transform 0.2s ease-in-out;
+        }
+        .modal.show .modal-content {
+            transform: scale(1);
         }
         .modal-header { padding: 15px; border-bottom: 1px solid #ddd; }
-        .modal-body { padding: 15px; overflow-y: auto; }
+        .modal-body { padding: 15px; overflow-y: auto; text-align: left; }
         .modal-footer { padding: 15px; border-top: 1px solid #ddd; }
         
-        .modal-content ul { list-style-type: none; padding: 0; text-align: left;}
+        .modal-content ul { list-style-type: none; padding: 0;}
         .modal-content li { margin: 0.5rem 0; background-color: #f8f9fa; padding: 8px; border-radius: 4px; }
         .modal-buttons { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
         .btn-secondary { background-color: #6c757d; }
@@ -93,7 +102,6 @@
         #candidate-search-input { width: 100%; box-sizing: border-box; padding: 0.75rem; font-size: 1rem; border: 1px solid #ccc; margin-bottom: 10px; }
         #candidate-list div { padding: 1rem; cursor: pointer; text-align: left; border-bottom: 1px solid #eee; }
         #candidate-list div:hover { background-color: var(--light-green); }
-        /* --- ▲▲▲ MODIFICATION END ▲▲▲ --- */
 
     </style>
 </head>
@@ -115,7 +123,7 @@
     <div id="confirm-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h2>請確認您的投票內容</h2></div>
-            <div class="modal-body"><div id="modal-confirm-results"></div><p>送出後將無法修改。</p></div>
+            <div class="modal-body"><div id="modal-confirm-results"></div><p style="text-align:center;">送出後將無法修改。</p></div>
             <div class="modal-footer modal-buttons">
                 <button class="btn btn-secondary" id="modal-cancel-btn">返回修改</button>
                 <button class="btn btn-danger" id="modal-confirm-btn">確認送出</button>
@@ -127,17 +135,16 @@
     <div id="success-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h2 style="color: var(--primary-green);">投票成功！</h2></div>
-            <div class="modal-body"><p>您的圈選結果如下：</p><div id="modal-results"></div></div>
+            <div class="modal-body"><p style="text-align:center;">您的圈選結果如下：</p><div id="modal-results"></div></div>
             <div class="modal-footer"><button class="btn" id="modal-close-btn">回到投票首頁</button></div>
         </div>
     </div>
     
-    <!-- ▼▼▼ MODIFICATION START: 新增通用提示 Modal 與候選人選擇 Modal ▼▼▼ -->
     <!-- 通用提示 Modal -->
     <div id="alert-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3 id="alert-modal-title">提示</h3></div>
-            <div class="modal-body"><p id="alert-modal-text"></p></div>
+            <div class="modal-body"><p id="alert-modal-text" style="text-align:center;"></p></div>
             <div class="modal-footer"><button class="btn" id="alert-modal-ok-btn">確認</button></div>
         </div>
     </div>
@@ -147,7 +154,11 @@
         <div class="modal-content">
             <div class="modal-header"><h3>選擇候選人</h3></div>
             <div class="modal-body">
-                <input type="text" id="candidate-search-input" placeholder="輸入關鍵字搜尋..." inputmode="search">
+                <!-- --- ▼▼▼ MODIFICATION START: 將搜尋框包裹在form中 ▼▼▼ --- -->
+                <form action="javascript:void(0);" id="candidate-search-form" style="margin:0;">
+                    <input type="text" id="candidate-search-input" placeholder="輸入關鍵字搜尋..." inputmode="search">
+                </form>
+                <!-- --- ▲▲▲ MODIFICATION END ▲▲▲ --- -->
                 <div id="candidate-list"></div>
             </div>
             <div class="modal-footer">
@@ -155,7 +166,6 @@
             </div>
         </div>
     </div>
-    <!-- ▲▲▲ MODIFICATION END ▲▲▲ -->
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzSHmDdTvPTzK70AvaSpUI7ru4HPMQyZGsn6JJDLfxOA9N8sA4OBAfNAN2jW2fomNs7/exec"; 
@@ -175,29 +185,27 @@
         const modalConfirmBtn = document.getElementById('modal-confirm-btn');
         const modalCancelBtn = document.getElementById('modal-cancel-btn');
         
-        // --- ▼▼▼ MODIFICATION START: 新增 Modal 的變數參考 ▼▼▼ ---
         const alertModal = document.getElementById('alert-modal');
         const alertModalText = document.getElementById('alert-modal-text');
         const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
 
         const candidateSelectorModal = document.getElementById('candidate-selector-modal');
+        const candidateSearchForm = document.getElementById('candidate-search-form');
         const candidateSearchInput = document.getElementById('candidate-search-input');
         const candidateList = document.getElementById('candidate-list');
         const candidateSelectorCloseBtn = document.getElementById('candidate-selector-close-btn');
-        // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
 
-        // --- ▼▼▼ MODIFICATION START: 新增通用提示函式與 Modal 控制邏輯 ▼▼▼ ---
         function showCustomAlert(message) {
             alertModalText.textContent = message;
             alertModal.classList.add('show');
         }
         alertModalOkBtn.addEventListener('click', () => alertModal.classList.remove('show'));
 
-        let currentSelectionTarget = null; // 用於記錄是哪個圈選項目觸發了 Modal
+        let currentSelectionTarget = null;
         
         function openCandidateSelector(targetElement, candidates) {
             currentSelectionTarget = targetElement;
-            candidateList.innerHTML = ''; // 清空舊列表
+            candidateList.innerHTML = '';
             candidates.forEach(c => {
                 const div = document.createElement('div');
                 div.textContent = c.name;
@@ -206,12 +214,12 @@
                 candidateList.appendChild(div);
             });
             candidateSelectorModal.classList.add('show');
-            setTimeout(() => candidateSearchInput.focus(), 100); // 延遲 focus 確保動畫效果與鍵盤彈出
+            setTimeout(() => candidateSearchInput.focus(), 100);
         }
 
         function closeCandidateSelector() {
             candidateSelectorModal.classList.remove('show');
-            candidateSearchInput.value = ''; // 清空搜尋框
+            candidateSearchInput.value = '';
         }
 
         function selectCandidate(id, name) {
@@ -231,6 +239,20 @@
             });
         });
         candidateSelectorCloseBtn.addEventListener('click', closeCandidateSelector);
+
+        // --- ▼▼▼ MODIFICATION START: 增加收起鍵盤的邏輯 ▼▼▼ ---
+        // 方案一：點擊 Modal 內非輸入框區域收起鍵盤
+        candidateSelectorModal.addEventListener('click', (e) => {
+            if (e.target === candidateSelectorModal || e.target === candidateList) {
+                candidateSearchInput.blur();
+            }
+        });
+
+        // 方案三：點擊鍵盤上的「完成/搜尋」按鈕收起鍵盤
+        candidateSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            candidateSearchInput.blur();
+        });
         // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
 
         function fillKeyFromUrl() {
@@ -281,8 +303,7 @@
                 throw error;
             }
         }
-
-        // --- ▼▼▼ MODIFICATION START: 重構金鑰提交邏輯，加入10秒冷卻倒數 ▼▼▼ ---
+        
         let cooldownInterval = null;
         function startCooldown() {
             submitKeyBtn.disabled = true;
@@ -294,6 +315,7 @@
                 submitKeyBtn.textContent = `請稍候 (${secondsLeft})...`;
                 if (secondsLeft <= 0) {
                     clearInterval(cooldownInterval);
+                    cooldownInterval = null;
                     submitKeyBtn.disabled = false;
                     submitKeyBtn.textContent = '下一步';
                 }
@@ -316,10 +338,9 @@
                 renderVoteView(response.data);
             } catch (error) {
                 showCustomAlert("錯誤：" + error.message);
-                startCooldown(); // 即使失敗也要開始冷卻
+                startCooldown();
             }
         }
-        // --- ▲▲▲ MODIFICATION END ▲▲▲ ---
 
         function renderVoteView({ election, candidates_by_choice }) {
             let html = `<h2>${election.name}</h2><p style="text-align:center;">本輪應選 ${election.num_to_elect} 位。</p>`;
@@ -404,7 +425,6 @@
                     successModal.classList.add('show');
                 } catch (error) {
                     showCustomAlert("投票失敗：" + error.message);
-                    // 失敗時退回投票畫面，而不是首頁
                     showView(voteView);
                 }
             };
@@ -420,7 +440,6 @@
             successModal.classList.remove('show');
             showView(homeView);
             keyInput.value = '';
-            // 恢復按鈕狀態，清除可能存在的計時器
             if (cooldownInterval) clearInterval(cooldownInterval);
             submitKeyBtn.disabled = false;
             submitKeyBtn.textContent = '下一步';
