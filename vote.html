@@ -154,11 +154,9 @@
         <div class="modal-content">
             <div class="modal-header"><h3>選擇候選人</h3></div>
             <div class="modal-body">
-                <!-- --- ▼▼▼ MODIFICATION START: 將搜尋框包裹在form中 ▼▼▼ --- -->
                 <form action="javascript:void(0);" id="candidate-search-form" style="margin:0;">
                     <input type="text" id="candidate-search-input" placeholder="輸入關鍵字搜尋..." inputmode="search">
                 </form>
-                <!-- --- ▲▲▲ MODIFICATION END ▲▲▲ --- -->
                 <div id="candidate-list"></div>
             </div>
             <div class="modal-footer">
@@ -231,7 +229,8 @@
             closeCandidateSelector();
         }
 
-        candidateSearchInput.addEventListener('keyup', () => {
+        // --- ▼▼▼ MODIFICATION START: 搜尋事件改用 'input'，並增加收起鍵盤的邏輯 ▼▼▼ ---
+        candidateSearchInput.addEventListener('input', () => {
             const filter = candidateSearchInput.value.toLowerCase();
             const items = candidateList.querySelectorAll('div');
             items.forEach(item => {
@@ -240,15 +239,12 @@
         });
         candidateSelectorCloseBtn.addEventListener('click', closeCandidateSelector);
 
-        // --- ▼▼▼ MODIFICATION START: 增加收起鍵盤的邏輯 ▼▼▼ ---
-        // 方案一：點擊 Modal 內非輸入框區域收起鍵盤
         candidateSelectorModal.addEventListener('click', (e) => {
             if (e.target === candidateSelectorModal || e.target === candidateList) {
                 candidateSearchInput.blur();
             }
         });
 
-        // 方案三：點擊鍵盤上的「完成/搜尋」按鈕收起鍵盤
         candidateSearchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             candidateSearchInput.blur();
